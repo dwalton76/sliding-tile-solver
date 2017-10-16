@@ -1,0 +1,58 @@
+
+4-tile puzzle
+=============
+DONE - rebuild the table using hex
+- ./solver.py --solve 3,0,2,1
+
+
+9-tile puzzle
+=============
+DONE - stop using IDA
+DONE - rebuild the table using hex
+- feed it a bogus puzzle but have it detect the puzzle is bogus prior to
+  attempting to look it up in the table
+- ./solver.py --solve 8,7,6,5,4,1,3,0,2
+
+
+16-tile puzzle
+==============
+DONE - rebuild the tables using hex
+
+- Instead of 1-5, 6-10, 11-15 prune table
+    - the 1-5 table has ~5.7 million entries and is 20M gzipped
+    - do 1-7 and 8-14...those would 518 million entries each and would take about 2G each :(
+    - do 1-6, 7-12, and 13-15...those would be 57 million entries each and would take about 230M
+
+- build the main table to 24-deep?
+    - today it runs out of memory when doing so
+
+
+25-tile puzzle
+==============
+- 25!/2 is a huge number
+
+- Breakdown into 1-6, 7-12, 13-18, 19-24 tables
+    - each of these would be 25!/19! or 127,512,000
+
+- Breakdown into 1-5, 6-10, 11-15, 16-20, 21-24
+    - each of these would be 25!/20! or 6,375,600
+
+
+36-tile puzzle
+==============
+- 36!/2 is a huge number
+- Breakdown into 1-6, 7-12, 13-18, 19-24, 25-30, 31-35 tables
+    - each of these would be 36!/30! or 1,402,410,240...that is too large
+
+- Breakdown into 1-5, 6-10, 11-15, 16-20, 21-25, 26-30, 31-35
+    - each of these would be 36!/31! or 45,239,040
+
+- Breakdown into 1-4, 5-8, 9-12, 13-16, 17-20, 21-24, 25-28, 29-32, 33-35
+    - each of these would be 36!/32! or 1,413,720
+
+
+Misc
+====
+- 9,11,12,15,7,2,13,8,1,0,5,4,10,6,14,3 takes 24s
+- 10,01,04,05,08,11,03,06,02,09,07,13,12,14,15,00 takes 1200ms and 51 moves
+    The solver at https://github.com/Samrix/Sliding-tile-puzzle-solver took 112 moves :)
