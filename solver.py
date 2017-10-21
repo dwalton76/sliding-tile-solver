@@ -145,7 +145,7 @@ class LookupTable(object):
             return ''.join(["%x" % x for x in self.parent.state[1:]])
 
         elif self.state_type == '1-6':
-            return ''.join(["%x" % number if (1 <= number <= 6 or number == 0) else 'x' for number in self.parent.state[1:]])
+            return ''.join(["%x" % number if 0 <= number <= 6 else 'x' for number in self.parent.state[1:]])
 
         elif self.state_type == '7-12':
             return ''.join(["%x" % number if (7 <= number <= 12 or number == 0) else 'x' for number in self.parent.state[1:]])
@@ -153,8 +153,27 @@ class LookupTable(object):
         elif self.state_type == '13-15':
             return ''.join(["%x" % number if (13 <= number <= 15 or number == 0) else 'x' for number in self.parent.state[1:]])
 
+        elif self.state_type == '1-2-3':
+            return ''.join(["%x" % number if 0 <= number <= 3 else 'x' for number in self.parent.state[1:]])
+
+        elif self.state_type == '4-5-6':
+            return ''.join(["%x" % number if 0 <= number <= 6 else 'x' for number in self.parent.state[1:]])
+
+        elif self.state_type == '11-16-21':
+            foo = []
+            for number in self.parent.state[1:]:
+                if 0 <= number <= 6 or number == 11:
+                    foo.append("%x" % number)
+                elif number == 16:
+                    foo.append('g')
+                elif number == 21:
+                    foo.append('l')
+                else:
+                    foo.append('x')
+            return ''.join(foo)
+
         else:
-            raise ImplementThis("")
+            raise ImplementThis("support state_type %s" % self.state_type)
 
     def binary_search(self, state_to_find):
         first = 0
@@ -833,6 +852,7 @@ class SliddingTilePuzzle(object):
                              '1230',
                              linecount=12,
                              size=self.size)
+            lt.solve()
 
         elif self.size == 9:
             lt = LookupTable(self,
@@ -841,6 +861,7 @@ class SliddingTilePuzzle(object):
                              '123456780',
                              linecount=181440,
                              size=self.size)
+            lt.solve()
 
         elif self.size == 16:
             # pt_manhattan = PruneTableManhattan(self)
@@ -873,11 +894,70 @@ class SliddingTilePuzzle(object):
                                 (lt_1_6, lt_7_12, lt_13_15),
                                 linecount=42928799, # 24-deep
                                 size=self.size)
+            lt.solve()
+
+        elif self.size == 25:
+            lt_1_2_3 = LookupTable(self,
+                                  'lookup-table-25-x-1-2-3.txt',
+                                  '1-2-3',
+                                  '123xxxxxxxxxxxxxxxxxxxxx0',
+                                  linecount=303600,
+                                  size=self.size)
+            lt_1_2_3.solve()
+
+            lt_4_5_6 = LookupTable(self,
+                                  'lookup-table-25-x-4-5-6.txt',
+                                  '4-5-6',
+                                  '123456xxxxxxxxxxxxxxx0xxx',
+                                  linecount=175560,
+                                  size=self.size)
+            lt_4_5_6.solve()
+
+            lt_11_16_21 = LookupTable(self,
+                                  'lookup-table-25-x-11-16-21.txt',
+                                  '11-16-21',
+                                  '123456xxxxbxxxxgxxxxlxxx0',
+                                  linecount=93024,
+                                  size=self.size)
+            lt_11_16_21.solve()
+
+            # Solve the remaining 16 tiles via the 16-tile solver
+            fake_16 = SliddingTilePuzzle()
+            state_16 = []
+            converter = {
+                7 : 1,
+                8 : 2,
+                9 : 3,
+                10 : 4,
+                12 : 5,
+                13 : 6,
+                14 : 7,
+                15 : 8,
+                17 : 9,
+                18 : 10,
+                19 : 11,
+                20 : 12,
+                22 : 13,
+                23 : 14,
+                24 : 15,
+                0 : 0
+            }
+
+            for number in (7, 8, 9, 10,
+                           12, 13, 14, 15,
+                           17, 18, 19, 20,
+                           22, 23, 24, 25):
+                state_16.append(converter[self.state[number]])
+
+            state_16 = ','.join(map(str, state_16))
+            #log.info("state_16: %s" % state_16)
+            fake_16.solve(state_16)
+
+            for move in fake_16.moves_to_here:
+                self.move_xyz(move)
 
         else:
             raise ImplementThis("Need LookupTable for size %d" % self.size)
-
-        lt.solve()
 
         move_verbose = {
             'u' : 'up',
@@ -894,35 +974,17 @@ class SliddingTilePuzzle(object):
 
         st.print_puzzle("Final Puzzle")
 
-    def lookup_table(self, size, start_range=None, end_range=None, max_depth=None):
-        # 4-tile puzzle is 4!/2 or 12
-        #
-        # 9-tile puzzle is 9!/2 or 181,440
-        #
-        # 16-tile puzzle is 16!/2 or 10,461,394,940,000
-        #   (16!/10!)/2 is  2,882,880/10,461,394,940,000 = 0.000 000 276...this will be slowish
-        #   (16!/9!)/2  is 28,828,800/10,461,394,940,000 = 0.000 002 756...this will be ok
-        #
-        # 25-tile puzzle is 25!/2 or 7.755605022x10²⁴
-        #   (25!/19!)/2 is 63,756,000/7.755605022x10²⁴ =
+    def lookup_table(self, size, tiles_to_keep=set(), tiles_to_not_move=set(), prune_table=False, max_depth=None):
 
         # Start with a solved puzzle
         self.load_solved_puzzle(size)
         filename = self.filename
 
-        if start_range and end_range:
-            assert start_range > 0, "start_range %d must be > 0" % start_range
-            assert end_range < self.size, "end_range %d must be < %d" % self.size
-            assert start_range < end_range, "start_range %d must be less than end_range %d" % (start_range, end_range)
-
+        if tiles_to_keep:
             for index in range(1, self.size):
-                if index < start_range or index > end_range:
+                if index not in tiles_to_keep and index not in tiles_to_not_move:
                     self.state[index] = 'x'
-
-            filename = 'lookup-table-%d-x-%d-%d.txt' % (self.size, start_range, end_range)
-        else:
-            assert start_range is None, "Both start_range and end_range must be set if one is set"
-            assert end_range is None, "Both start_range and end_range must be set if one is set"
+            filename = 'lookup-table-%d-x-%s.txt' % (self.size, '-'.join(map(str, sorted(list(tiles_to_keep)))))
 
         if os.path.exists(filename):
             log.warning("%s already exists" % filename)
@@ -942,34 +1004,38 @@ class SliddingTilePuzzle(object):
         moves_to_make = deque([])
         for move in self.moves[self.empty_type]:
             moves_to_make.append(move)
+        log.info("count %d, moves_to_make %d" % (count, len(moves_to_make)))
 
-        # dwalton
         while moves_to_make:
             self.state = init_state[:]
             self.moves_to_here = init_moves_to_here[:]
-            #self.empty_index = copy(init_empty_index)
-            #self.empty_type = copy(init_empty_type)
             self.empty_index = init_empty_index
             self.empty_type = init_empty_type
             move_seq = moves_to_make.popleft()
             move_cost = 0
             prev_empty_index = self.empty_index
+            move_ok = True
 
             for move in move_seq:
                 self.move_xyz(move)
 
                 # This is a prune table
-                if (start_range is not None and
+                if (prune_table and
                     self.state[prev_empty_index] != 'x' and
-                    self.state[prev_empty_index] >= start_range and self.state[prev_empty_index] <= end_range):
+                    self.state[prev_empty_index] in tiles_to_keep):
                     move_cost += 1
+
+                # dwalton
+                if self.state[prev_empty_index] in tiles_to_not_move:
+                    move_ok = False
+                    break
 
                 prev_empty_index = self.empty_index
 
-            if tuple(self.state[1:]) not in lookup_table_states:
+            if move_ok and tuple(self.state[1:]) not in lookup_table_states:
 
                 # This is a prune table
-                if start_range is not None:
+                if prune_table:
                     lookup_table_states[tuple(self.state[1:])] = move_cost
 
                 # This is a normal LookupTable so reverse the steps and store the first one
@@ -1011,6 +1077,29 @@ class SliddingTilePuzzle(object):
         log.info("writing %s" % filename)
 
         with open(filename, 'w') as fh:
+            extended_hex = {
+                16 : 'g',
+                17 : 'h',
+                18 : 'i',
+                19 : 'j',
+                20 : 'k',
+                21 : 'l',
+                22 : 'm',
+                23 : 'n',
+                24 : 'o',
+                25 : 'p',
+                26 : 'q',
+                27 : 'r',
+                28 : 's',
+                29 : 't',
+                30 : 'u',
+                31 : 'v',
+                32 : 'w',
+                33 : '-', # we alredy used 'x' for tiles we are not tracking
+                34 : 'y',
+                35 : 'z',
+            }
+
             for (key, value) in lookup_table_states.items():
 
                 # Write numbers in hex
@@ -1020,7 +1109,7 @@ class SliddingTilePuzzle(object):
                         if number <= 15:
                             foo.append("%x" % number)
                         else:
-                            raise ImplementThis("Add hex support for > 15")
+                            foo.append(extended_hex[number])
                     else:
                         foo.append(number)
                 state = ''.join(foo)
@@ -1079,33 +1168,29 @@ if __name__ == '__main__':
         elif args.lookup_table:
 
             if args.lookup_table == 4:
-                st.lookup_table(args.lookup_table, use_hex=True)
+                st.lookup_table(args.lookup_table, prune_table=False)
 
             elif args.lookup_table == 9:
-                st.lookup_table(args.lookup_table, use_hex=True)
+                st.lookup_table(args.lookup_table, prune_table=False)
 
             elif args.lookup_table == 16:
 
                 # 20-deep
                 # - took about 5 minutes
                 # - 3.4 million entries
-                # - 17M gzipped
                 #
                 # 22-deep
                 # - took about 27 minutes
                 # - 12.3 million entries
-                # - 49M gzipped
-                # - building to 24-deep (about 48 million entries) should be doable, would be about 200M gzipped
-                #st.lookup_table(args.lookup_table, max_depth=4)
-                #st.lookup_table(args.lookup_table, max_depth=20)
-                #st.lookup_table(args.lookup_table, max_depth=22)
-                st.lookup_table(args.lookup_table, max_depth=24)
+                st.lookup_table(args.lookup_table, prune_table=False, max_depth=24)
+                st.lookup_table(args.lookup_table, tiles_to_keep=set((1, 2, 3, 4, 5, 6)), prune_table=True)
+                st.lookup_table(args.lookup_table, tiles_to_keep=set((7, 8, 9, 10, 11, 12)), prune_table=True)
+                st.lookup_table(args.lookup_table, tiles_to_keep=set((13, 14, 15)), prune_table=True)
 
-                #st.lookup_table(args.lookup_table, 1, 3)
-                #st.lookup_table(args.lookup_table, 1, 6)
-                #st.lookup_table(args.lookup_table, 1, 5)
-                #st.lookup_table(args.lookup_table, 6, 10)
-                #st.lookup_table(args.lookup_table, 11, 15)
+            elif args.lookup_table == 25:
+                #st.lookup_table(args.lookup_table, tiles_to_keep=set((1, 2, 3)), prune_table=False)
+                #st.lookup_table(args.lookup_table, tiles_to_keep=set((4, 5, 6)), tiles_to_not_move=set((1,2,3)), prune_table=False)
+                st.lookup_table(args.lookup_table, tiles_to_keep=set((11, 16, 21)), tiles_to_not_move=set((1, 2, 3, 4, 5, 6)), prune_table=False)
 
             else:
                 raise ImplementThis("Add lookup-table support for %d" % args.lookup_table)

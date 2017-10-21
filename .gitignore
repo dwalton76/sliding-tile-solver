@@ -1,4 +1,5 @@
 *.pyc
 *.swp
 lookup-table*.txt
+moves_to_make.txt
 tmp
