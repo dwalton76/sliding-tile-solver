@@ -20,11 +20,12 @@ Three phases to reduce to 16-tile
 
 Two phases to reduce to 16-tile
 -------------------------------
-- Place tiles 1, 2, 3, 4
-    - this table will be 25!/20! or 6,375,600
+- Place tiles 1, 2, 3, 4, 5
+    - this table will be 25!/19! or 127,512,000
+    - would be ~400M zipped
 
-- Place tiles 5, 6, 11, 16, 21 without disturbing 1, 2, 3, 4
-    - this table will have 21!/15! or 39,070,080
+- Place tiles 6, 11, 16, 21 without disturbing 1, 2, 3, 4, 5
+    - this table will have 20!/15! or 1,860,480
 
 
 
@@ -32,10 +33,12 @@ Two phases to reduce to 16-tile
 ==============
 - 36!/2 is a HUGE number
 
-- Place tiles 1-3
+Four phases to reduce to 25-tile
+-------------------------------
+- Place tiles 1, 2, 3
     - this table will be 36!/32! or 1,413,720
 
-- Place tiles 4-6
+- Place tiles 4, 5, 6
     - this table will be 33!/29! or 982,080
 
 - Place tiles 7, 13, 19
@@ -43,5 +46,19 @@ Two phases to reduce to 16-tile
 
 - Place tiles 25, 31
     - this table will be 27!/24! or 17,550
+
+- Solve the remaining tiles via the 25-tile solver
+
+
+Three phases to reduce to 25-tile
+---------------------------------
+- Place tiles 1, 2, 3, 4
+    - this table will be 36!/31! or 45,239,040
+
+- Place tiles 5, 6, 7, 13
+    - this table will be 32!/27! or 24,165,120
+
+- Place tiles 19, 25, 31
+    - this table will be 28!/24! or 491,400
 
 - Solve the remaining tiles via the 25-tile solver

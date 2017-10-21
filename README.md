@@ -51,4 +51,5 @@ These are used by IDA\* to prune branches that are headed in the wrong direction
 
 ### 36-tile example
 ```
+./solver.py --solve 1,8,3,17,23,12,19,7,11,29,5,6,0,9,2,4,10,16,26,31,34,32,22,15,20,13,30,14,21,24,25,27,33,28,18,35
 ```
