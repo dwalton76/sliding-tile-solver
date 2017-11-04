@@ -1299,10 +1299,17 @@ if __name__ == '__main__':
 
 
             elif args.lookup_table == 36:
-                st.lookup_table(args.lookup_table, tiles_to_keep=set((1, 2, 3)), prune_table=False)
-                st.lookup_table(args.lookup_table, tiles_to_keep=set((4, 5, 6)), tiles_to_not_move=set((1, 2, 3)), prune_table=False)
-                st.lookup_table(args.lookup_table, tiles_to_keep=set((7, 13, 19)), tiles_to_not_move=set((1, 2, 3, 4, 5, 6)), prune_table=False)
-                st.lookup_table(args.lookup_table, tiles_to_keep=set((25, 31)), tiles_to_not_move=set((1, 2, 3, 4, 5, 6, 7, 13, 19)), prune_table=False)
+
+                # Four phases
+                #st.lookup_table(args.lookup_table, tiles_to_keep=set((1, 2, 3)), prune_table=False)
+                #st.lookup_table(args.lookup_table, tiles_to_keep=set((4, 5, 6)), tiles_to_not_move=set((1, 2, 3)), prune_table=False)
+                #st.lookup_table(args.lookup_table, tiles_to_keep=set((7, 13, 19)), tiles_to_not_move=set((1, 2, 3, 4, 5, 6)), prune_table=False)
+                #st.lookup_table(args.lookup_table, tiles_to_keep=set((25, 31)), tiles_to_not_move=set((1, 2, 3, 4, 5, 6, 7, 13, 19)), prune_table=False)
+
+                # Three phases
+                st.lookup_table(args.lookup_table, tiles_to_keep=set((1, 2, 3, 4)), prune_table=False)
+                st.lookup_table(args.lookup_table, tiles_to_keep=set((5, 6, 7, 13)), tiles_to_not_move=set((1, 2, 3, 4)), prune_table=False)
+                st.lookup_table(args.lookup_table, tiles_to_keep=set((19, 25, 31)), tiles_to_not_move=set((1, 2, 3, 4, 5, 6, 7, 13)), prune_table=False)
 
             else:
                 raise ImplementThis("Add lookup-table support for %d" % args.lookup_table)
